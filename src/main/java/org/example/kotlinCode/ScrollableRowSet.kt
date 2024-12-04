@@ -16,8 +16,8 @@ fun rowSet() {
         }
         conn.prepareStatement(
             "SELECT * FROM Books",
-            ResultSet.TYPE_SCROLL_INSENSITIVE,
-            ResultSet.CONCUR_READ_ONLY).use { preparedStatement ->
+            ResultSet.TYPE_SCROLL_INSENSITIVE, //with changes to DB
+            ResultSet.CONCUR_READ_ONLY).use { preparedStatement ->  //readOnly or updatable
             preparedStatement.executeQuery().use { resultSet ->
                 //reading the next element
                 if(resultSet.next()) println(resultSet.getString("name"))
