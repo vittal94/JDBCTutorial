@@ -34,6 +34,7 @@ fun rowSet() {
                 if(resultSet.first()) println(resultSet.getString("name"))
                 //reading last row
                 if(resultSet.last()) println(resultSet.getString("name"))
+                //if (resultSet.isBeforeFirst) //when using in cycle
             }
         }
     }
