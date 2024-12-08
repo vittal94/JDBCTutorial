@@ -2,8 +2,9 @@ package org.example.kotlinCode
 
 import java.sql.DriverManager
 import java.sql.ResultSet
+import java.sql.Types
 
-fun rowSet() {
+fun rowSetReading() {
     DriverManager.getConnection(url, username, password).use { conn ->
         conn.createStatement().use { stat ->
             stat.executeUpdate("DROP TABLE IF EXISTS Books")
@@ -16,7 +17,7 @@ fun rowSet() {
         }
         conn.prepareStatement(
             "SELECT * FROM Books",
-            ResultSet.TYPE_SCROLL_INSENSITIVE, //with changes to DB
+            ResultSet.TYPE_SCROLL_INSENSITIVE, //without changes to DB
             ResultSet.CONCUR_READ_ONLY).use { preparedStatement ->  //readOnly or updatable
             preparedStatement.executeQuery().use { resultSet ->
                 //reading the next element
@@ -39,6 +40,54 @@ fun rowSet() {
         }
     }
 }
+
+fun rowSetModifying() {
+    DriverManager.getConnection(url, username, password).use { conn ->
+        conn.createStatement().use { stat ->
+            stat.executeUpdate("DROP TABLE IF EXISTS Books")
+            stat.executeUpdate("CREATE TABLE IF NOT EXISTS Books(" +
+                    "id INT AUTO_INCREMENT PRIMARY KEY," +
+                    "name VARCHAR(30) NOT NULL)")
+            stat.executeUpdate("INSERT INTO Books(name) VALUES('MAN')")
+            stat.executeUpdate("INSERT INTO Books(name) VALUES('JAVA')")
+            stat.executeUpdate("INSERT INTO Books(name) VALUES('SPRING')")
+
+            conn.createStatement(
+                ResultSet.TYPE_SCROLL_SENSITIVE, //with changes to DB
+                ResultSet.CONCUR_UPDATABLE).use { modifyingStat ->
+                modifyingStat.executeQuery("SELECT * FROM Books").use { resultSet ->
+                    println("Original data from Books")
+                    while (resultSet.next()) {
+                        println("${resultSet.getInt("id")} " +
+                                resultSet.getString("name"))
+                    }
+                    println("\nModified data from Books")
+                    resultSet.apply {
+                        //updating the existing row
+                        last()
+                        updateString("name","SPRING SECURITY")
+                        updateRow()
+
+                        //inserting a new row
+                        moveToInsertRow()
+                        updateString("name","HYBERNATE")
+                        insertRow()
+
+                        //deleting row
+                        absolute(1)
+                        deleteRow()
+                    }
+                    resultSet.beforeFirst()
+                    while (resultSet.next()) {
+                        println("${resultSet.getInt("id")} " +
+                                resultSet.getString("name"))
+                    }
+                }
+            }
+        }
+    }
+}
 fun main() {
-rowSet()
+//rowSetReading()
+    rowSetModifying()
 }
